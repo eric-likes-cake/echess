@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<link rel="stylesheet" href="/base.css">
+		<title><%= title %></title>
+	</head>
+	<body>
+		<h1><%= title %></h1>
+		<% if (error && error.length) { %>
+			<p><%= error %></p>
+		<% } %>
+		<form action="/login" method="post">
+			<table class="th-left">
+				<tr>
+					<th>Username:</th>
+					<td><input type="text" name="username" id="username" value="<%= form.username %>"></td>
+				</tr>
+				<tr>
+					<th>Password:</th>
+					<td><input type="password" name="password" value="<%= form.password %>"></td>
+				</tr>
+			</table>
+			<input type="submit" value="Log in">
+		</form>
+		<p><a href="/register" id="register-link">Register</a></p>
+	</body>
+</html>
+
+<script>
+	const input = document.getElementById("username");
+
+	input.addEventListener("keyup", function(e) {
+		const a = document.querySelector("a#register-link");
+		const url = new URL(a.href);
+		const params = new URLSearchParams(url.search);
+		params.set("username", e.target.value);
+		a.href = url.origin + url.pathname + "?" + params.toString();
+		return true;
+	})
+</script>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<link rel="stylesheet" href="/base.css">
+		<title><%= title %></title>
+	</head>
+	<body>
+		<h1><%= title %></h1>
+		<p>to do:</p>
+		<ul>
+			<li>List of lobby games</li>
+			<li>Button to create a new game</li>
+			<li>form for creating a game, maybe with a checkbox which will make the game private (only playable by link, not showing up in the list)</li>
+			<li>textbox showing created game link to share</li>
+		</ul>
+		<p>information:</p>
+		<table class="th-left">
+			<tr>
+				<th>Session ID:</th>
+				<td><%= session_id %> (private information)</td>
+			</tr>
+			<tr>
+				<th>Username:</th>
+				<td><%= username %></td>
+			</tr>
+			<tr>
+				<th>Game link:</th>
+				<td>Create a game, and share the link that shows here with a friend. (Or wait for someone random to join)</td>
+			</tr>
+		</table>
+		<p>Click <a href="#" id="create-game-link">here</a> to create a new game.</p>
+		<% if (error && error.length) { %>
+			<p>An error occurred: <%= error %></p>
+		<% } %>
+		<nav>
+			<a href="/login">Log in</a>
+			<a href="/logout">Log out</a>
+			<a href="/register">Register</a>
+		</nav>
+	</body>
+</html>
+
+
+<script>
+	const create_game_link = document.getElementById("create-game-link");
+
+	create_game_link.addEventListener("click", function(e) {
+		e.preventDefault();
+
+		// POST /game   data: {no options yet, so no data needed. creator username is the session username}
+		// i guess i could also use a websocket here which is what i wanted to do
+		// either way we will need a websocket to recv the new games and add them to the table
+		socket.send("Create a game clicked");
+		return false;
+	})
+
+
+	// Create WebSocket connection.
+	const socket = new WebSocket("ws://localhost:3030");
+
+	// Connection opened
+	socket.addEventListener("open", (event) => {
+		socket.send("Hello from the client");
+	});
+
+	// Listen for messages
+	socket.addEventListener("message", (event) => {
+		console.log(event.data);
+	});
+
+</script>

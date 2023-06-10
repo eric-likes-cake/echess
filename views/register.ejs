@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<link rel="stylesheet" href="/base.css">
+		<title><%= title %></title>
+	</head>
+	<body>
+		<h1><%= title %></h1>
+
+		<% if (errors?.length) { %>
+			<ul>
+				<% errors.forEach(e => { %>
+					<li><%= e %></li>
+				<% }); %>
+			</ul>
+		<% } %>
+
+		<form action="/register" method="post">
+			<table class="th-left">
+				<tr>
+					<th>Username:</th>
+					<td><input type="text" name="username" value="<%= form.username %>"></td>
+				</tr>
+				<tr>
+					<th>Email Address:</th>
+					<td><input type="text" name="email" value="<%= form.email %>"></td>
+				</tr>
+				<tr>
+					<th>Password:</th>
+					<td><input type="password" name="password" value="<%= form.password %>"></td>
+				</tr>
+				<tr>
+					<th>Confirm Password:</th>
+					<td><input type="password" name="confirm_password" value="<%= form.confirm_password %>"></td>
+				</tr>
+			</table>
+			<input type="submit" value="Register">
+
+			<p>Your email address is optional, however a confirmed email address is required to chat and to reset your password.</p>
+			<p>(email features are currently not implemented)</p>
+		</form>
+	</body>
+</html>

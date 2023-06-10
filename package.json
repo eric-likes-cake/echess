@@ -1,0 +1,28 @@
+{
+  "name": "echess",
+  "version": "1.0.0",
+  "description": "",
+  "directories": {
+    "doc": "docs"
+  },
+  "main": "server.js",
+  "scripts": {
+    "test": "jest",
+    "echess": "nodemon server.js --ignore public/",
+    "echess-ws": "nodemon server-ws.js --ignore public/"
+  },
+  "keywords": [],
+  "author": "Eric Shaw",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "ws": "^8.13.0"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0",
+    "nodemon": "^2.0.22"
+  }
+}
