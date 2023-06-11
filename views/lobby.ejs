@@ -27,13 +27,21 @@
 				<td id="connection-status"></td>
 			</tr>
 		</table>
-		<p>Click <a href="#" id="create-game-link">here</a> to create a new game.</p>
+		<p>To start a game, click one of the following links.</p>
+		<p>
+			Play on a
+			<a href="#" class="play-game-link" data-color="random">random</a> side, as
+			<a href="#" class="play-game-link" data-color="white">white</a>, or as
+			<a href="#" class="play-game-link" data-color="black">black</a>
+		</p>
 		<h2>Games:</h2>
 		<table border="1">
 			<thead>
 				<tr>
 					<th>Username</th>
+					<th>Game Option</th>
 					<th>Date Created</th>
+					<th>Link</th>
 				</tr>
 			</thead>
 			<tbody id="games"></tbody>
@@ -48,14 +56,31 @@
 
 
 <script>
-	const session_id = document.querySelector("body").dataset["sessionId"];
-	const create_game_link = document.getElementById("create-game-link");
+	const body = document.querySelector("body");
+	const session_id = body.dataset["sessionId"];
 
-	create_game_link.addEventListener("click", function(e) {
+	body.addEventListener("click", PlayGameClick)
+
+	function PlayGameClick(e) {
+		if (!e.target.classList.contains("play-game-link")) {
+			return true;
+		}
+
 		e.preventDefault();
-		socket.send("create-game");
+
+		// get the color or id
+		const color = e.target.dataset["color"];
+		const id = e.target.dataset["id"];
+
+		if (color) {
+			socket.send(`play-game color: ${color}`);
+		}
+		else if (id) {
+			socket.send(`play-game id: ${id}`);
+		}
+		
 		return false;
-	});
+	}
 
 	// Create WebSocket connection.
 	SetConnectionMessage("Not connected.");
@@ -127,8 +152,17 @@
 
 	function AddGames(games) {
 		const table_body = document.querySelector("#games");
-		const table_data = games.map(game => `<tr id="${game.id}"><td>${game.username}</td><td>${game.date}</td></tr>`);
-		table_data.map(tr => table_body.innerHTML += tr);
+		const table_data = games.map(game => {
+			return (
+				`<tr id="${game.id}">
+					<td>${game.username}</td>
+					<td>${game.color}</td>
+					<td>${game.date}</td>
+					<td><a href="#" class="play-game-link" data-id="${game.id}">Join Game</a></td>
+				</tr>`
+			)
+		});
+		table_body.innerHTML += table_data.join("");
 	}
 
 	function RemoveGames(ids) {

@@ -4,16 +4,17 @@
  * @param {string} session_id Creator session id. Not to be shown to the user.
  * @param {String} username The display name, this can also be "Anonymous"
  * @param {Date} date Created time in UTC timezone.
+ * @param {string} color The game is chess, white, black, or random.
  */
-function LobbyGame(id, session_id, username, date) {
+function LobbyGame(id, session_id, username, date, color) {
     this.id = id;
     this.session_id = String(session_id);
     this.username = username;
     this.date = date || Date.now();
-}
-
-LobbyGame.From = function (obj) {
-    return new LobbyGame(obj.creator, new Date(obj.date));
+    this.color = color;
+    if ("white black random".split(" ").indexOf(color) < 0) {
+        throw new Error("Invalid lobby game color")
+    }
 }
 
 // Object without the session id for the web socket
@@ -22,6 +23,7 @@ LobbyGame.prototype.ViewData = function() {
         id: this.id,
         username: this.username,
         date: this.date,
+        color: this.color,
     }
 }
 

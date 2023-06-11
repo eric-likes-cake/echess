@@ -6,7 +6,12 @@ const JsonService = require("./echess/json_service");
 // websocket server
 const wss = new WebSocket.WebSocketServer({ port: 3030 });
 
+// socket -> state object for each user
 const state = new Map();
+// session id -> socket
+const socket_map = new Map();
+// game id -> game.
+const lobby = new Map();
 
 wss.on("connection", function (socket, request, client) {
 
@@ -28,12 +33,21 @@ function SocketMessageCallback(data) {
 
     const socket = this;
     const auth_match = data.toString().match(/^auth (.+)$/);
+    const play_color_match = data.toString().match(/^play-game color: (.+)$/);
+    const play_id_match = data.toString().match(/^play-game id: (.+)$/);
 
     if (auth_match) {
         Authenticate(socket, auth_match[1]);
     }
-    else if (data == "create-game") {
-        CreateLobbyGame(socket);
+    else if (play_color_match) {
+        // to do: join an existing game
+        // color == random -> lobby game == random
+        // color == white -> lobby game == black
+        // color == black -> lobby game == white
+        CreateLobbyGame(socket, play_color_match[1]);
+    }
+    else if (play_id_match) {
+        JoinGame(socket, play_id_match[1]);
     }
     else if (data == "game-list") {
         SendGameList(socket);
@@ -49,25 +63,47 @@ function Authenticate(socket, session_id) {
     entry.session_id = session_id;
     entry.username = "Anonymous User";
 
+    socket_map.set(session_id, socket);
+
     const user_svc = new JsonService(JsonService.USERDATA_FILEPATH);
     user_svc.Find({session_id: entry.session_id}).then(results => results.length ? entry.username = results[0].username : void 0).catch(console.error);
 }
 
-function CreateLobbyGame(socket) {
+function CreateLobbyGame(socket, color) {
     const {session_id, username} = state.get(socket);
-    const game_svc = new JsonService(JsonService.LOBBY_DATA_FILEPATH);
-    const game = new LobbyGame(crypto.randomUUID(), session_id, username, new Date());
 
-    return game_svc.Create(game).then(() => BroadcastMessage(Response("new-game", game.ViewData(username))))
-        .catch(console.error);
+    // add a new game to the lobby
+    const game = new LobbyGame(crypto.randomUUID(), session_id, username, new Date(), color);
+    lobby.set(game.id, game);
+
+    BroadcastMessage(Response("new-game", game.ViewData()));
+}
+
+function JoinGame(socket, id) {
+
+    const entry = state.get(socket);
+    const game = lobby.get(id);
+    
+    if (!lobby.delete(id)) {
+        return;
+    }
+
+    const response = Response("game-url", `/game/${id}`)
+
+    socket.send(response);
+    BroadcastMessage(Response("remove-games", [id]));
+    DeleteUserGames(game.session_id);
+    DeleteUserGames(entry.session_id);
+
+    if (socket_map.has(game.session_id)) {
+        const other = socket_map.get(game.session_id);
+        other.send(response);
+    }
 }
 
 function SendGameList(socket) {
-    const game_svc = new JsonService(JsonService.LOBBY_DATA_FILEPATH);
-    game_svc.Read().then(results => {
-        const games = results.map(game => LobbyGame.prototype.ViewData.apply(game));
-        socket.send(Response("game-list", games));
-    }).catch(console.error);
+    const games = Array.from(lobby.values()).map(game => LobbyGame.prototype.ViewData.apply(game));
+    socket.send(Response("game-list", games));
 }
 
 function BroadcastMessage(msg) {
@@ -91,10 +127,20 @@ function CloseConnection() {
 
     const entry = state.get(socket);
     state.delete(socket);
-    const game_svc = new JsonService(JsonService.LOBBY_DATA_FILEPATH);
-    game_svc.Destroy(game => game.username === entry.username || game.session_id === entry.session_id)
-        .then(DeletedGamesResponse)
-        .catch(console.error);
+    socket_map.delete(entry.session_id);
+
+    DeleteUserGames(entry.session_id);
+}
+
+function DeleteUserGames(session_id) {
+    const games = [];
+    for (const game of lobby.values()) {
+        if (game.session_id === session_id) {
+            games.push(game);
+            lobby.delete(game.id);
+        }
+    }
+    DeletedGamesResponse(games);
 }
 
 function DeletedGamesResponse(games) {
