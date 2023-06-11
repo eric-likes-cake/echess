@@ -5,7 +5,7 @@
 		<link rel="stylesheet" href="/base.css">
 		<title><%= title %></title>
 	</head>
-	<body>
+	<body data-session-id="<%= session_id %>">
 		<h1><%= title %></h1>
 		<p>to do:</p>
 		<ul>
@@ -17,16 +17,12 @@
 		<p>information:</p>
 		<table class="th-left">
 			<tr>
-				<th>Session ID:</th>
-				<td><%= session_id %> (private information)</td>
-			</tr>
-			<tr>
 				<th>Username:</th>
 				<td><%= username %></td>
 			</tr>
 			<tr>
-				<th>Game link:</th>
-				<td>Create a game, and share the link that shows here with a friend. (Or wait for someone random to join)</td>
+				<th>Connection Status:</th>
+				<td id="connection-status"></td>
 			</tr>
 		</table>
 		<p>Click <a href="#" id="create-game-link">here</a> to create a new game.</p>
@@ -55,18 +51,47 @@
 		return false;
 	})
 
-
 	// Create WebSocket connection.
-	const socket = new WebSocket("ws://localhost:3030");
+	SetConnectionMessage("Not connected.");
+	let socket = Connect();
 
-	// Connection opened
-	socket.addEventListener("open", (event) => {
-		socket.send("Hello from the client");
-	});
+	function Connect() {
+		const socket = new WebSocket("ws://localhost:3030");
 
-	// Listen for messages
-	socket.addEventListener("message", (event) => {
-		console.log(event.data);
-	});
+		// Connection opened
+		socket.addEventListener("open", (event) => {
+			SetConnectionMessage("Connected.", "green");
+			socket.send("Hello from the client");
+		});
 
+		// Listen for messages
+		socket.addEventListener("message", (event) => {
+			console.log(event.data);
+		});
+
+		socket.addEventListener("close", (event) => {
+			console.log(event.type);
+			SetConnectionMessage("Disconnected.", "red");
+		});
+		
+		return socket;
+	}
+
+	function SetConnectionMessage(message, color) {
+		const td = document.querySelector("td#connection-status");
+		td.classList.remove("green");
+		td.classList.remove("red");
+		if (color?.length) {
+			td.classList.add(color);
+		}
+		td.innerHTML = message;
+	}
+
+	// reconnect as needed
+	const interval = setInterval(function() {
+		if (socket.readyState === WebSocket.CLOSED) {
+			SetConnectionMessage("Reconnecting...", "red");
+			socket = Connect();
+		}
+	}, 2000);
 </script>

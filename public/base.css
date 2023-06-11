@@ -1,3 +1,11 @@
 table.th-left th {
     text-align: left;
 }
+
+.red {
+    color: red;
+}
+
+.green {
+    color: green;
+}
