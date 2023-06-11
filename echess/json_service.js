@@ -1,4 +1,3 @@
-const { error } = require("console");
 const fs = require("fs/promises");
 const path = require('node:path');
 
@@ -7,6 +6,7 @@ function JsonService(filepath) {
 }
 
 JsonService.USERDATA_FILEPATH = "data/users.json";
+JsonService.LOBBY_DATA_FILEPATH = "data/lobby.json";
 
 function SaveJsonToDisk(filepath, json) {
     // make the directory first
@@ -73,11 +73,7 @@ JsonService.prototype.Update = function (filter, data) {
                 count++;
             });
 
-            return SaveJsonToDisk(filepath, JSON.stringify(results, null, 4)).then(_ => Promise.resolve(count))
-                .catch(error => {
-                    console.log(error.message);
-                    return Promise.resolve(0);
-                });
+            return SaveJsonToDisk(filepath, JSON.stringify(results, null, 4)).then(_ => Promise.resolve(count));
         })
         .catch(error => {
             console.log(error.message);
@@ -85,13 +81,24 @@ JsonService.prototype.Update = function (filter, data) {
         });
 }
 
-JsonService.prototype.Count = function(entry) {
-    const data = this.Read();
-    const results = data.then(entry => Promise.resolve(entry.filter(entry => Matches(entry, filter))), error => console.log(error.message));
-    return results.then(data => Promise.resolve(data?.length)).catch(error => {
-        console.log(error.message);
-        return Promise.resolve(0);
-    });
+/**
+ * Deletes records from the json file.
+ * @param {Function} match_callback 
+ * @returns {Promise} The deleted records
+ */
+JsonService.prototype.Destroy = function(match_callback) {
+    const filepath = this.filepath;
+
+    return this.Read()
+        .then(results => {
+            const deleted = results.filter(entry => match_callback(entry));
+            const others = results.filter(entry => !match_callback(entry));
+            return SaveJsonToDisk(filepath, JSON.stringify(others, null, 4)).then(_ => Promise.resolve(deleted));
+        })
+        .catch(function(error) {
+            console.log(error.message)
+            return Promise.resolve([])
+        });
 }
 
 function Matches(entry, filter) {

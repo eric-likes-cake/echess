@@ -22,9 +22,10 @@ app.use("/", lobby_router);
 app.use("/game", game_router);
 app.use("/", user_router);
 
-
 let port = process.env.PORT;
+
 if (!port) {
     port = 3000;
 }
-app.listen(port);
+
+app.listen(port)

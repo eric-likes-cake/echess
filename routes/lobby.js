@@ -1,6 +1,3 @@
-const JsonService = require("../echess/json_service");
-const User = require("../echess/user")
-
 const express = require("express");
 const router = express.Router();
 

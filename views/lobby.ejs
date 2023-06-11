@@ -7,6 +7,9 @@
 	</head>
 	<body data-session-id="<%= session_id %>">
 		<h1><%= title %></h1>
+		<% if (error && error.length) { %>
+			<p>An error occurred: <%= error %></p>
+		<% } %>
 		<p>to do:</p>
 		<ul>
 			<li>List of lobby games</li>
@@ -26,30 +29,34 @@
 			</tr>
 		</table>
 		<p>Click <a href="#" id="create-game-link">here</a> to create a new game.</p>
-		<% if (error && error.length) { %>
-			<p>An error occurred: <%= error %></p>
-		<% } %>
-		<nav>
-			<a href="/login">Log in</a>
-			<a href="/logout">Log out</a>
-			<a href="/register">Register</a>
-		</nav>
+		<h2>Games:</h2>
+		<table border="1">
+			<thead>
+				<tr>
+					<th>Username</th>
+					<th>Date Created</th>
+				</tr>
+			</thead>
+			<tbody id="games"></tbody>
+		</table>
+		<ul>
+			<li><a href="/login">Log in</a></li>
+			<li><a href="/logout">Log out</a></li>
+			<li><a href="/register">Register</a></li>
+		</ul>
 	</body>
 </html>
 
 
 <script>
+	const session_id = document.querySelector("body").dataset["sessionId"];
 	const create_game_link = document.getElementById("create-game-link");
 
 	create_game_link.addEventListener("click", function(e) {
 		e.preventDefault();
-
-		// POST /game   data: {no options yet, so no data needed. creator username is the session username}
-		// i guess i could also use a websocket here which is what i wanted to do
-		// either way we will need a websocket to recv the new games and add them to the table
-		socket.send("Create a game clicked");
+		socket.send("create-game");
 		return false;
-	})
+	});
 
 	// Create WebSocket connection.
 	SetConnectionMessage("Not connected.");
@@ -61,12 +68,14 @@
 		// Connection opened
 		socket.addEventListener("open", (event) => {
 			SetConnectionMessage("Connected.", "green");
-			socket.send("Hello from the client");
+			socket.send("game-list");
+			socket.send(`auth ${session_id}`);
 		});
 
 		// Listen for messages
 		socket.addEventListener("message", (event) => {
 			console.log(event.data);
+			HandleServerMessage(event.data);
 		});
 
 		socket.addEventListener("close", (event) => {
@@ -94,4 +103,39 @@
 			socket = Connect();
 		}
 	}, 2000);
+
+	function HandleServerMessage(message) {
+		const [tag, data] = JSON.parse(message);
+		if (tag === "message") {
+			console.log(message);
+		}
+		else if (tag === "new-game") {
+			AddGames([data]);
+		}
+		else if (tag === "game-list") {
+			ClearGames();
+			AddGames(data);
+		}
+		else if (tag === "remove-games") {
+			RemoveGames(data);
+		}
+	}
+
+	function ClearGames() {
+		const table_body = document.querySelector("#games");
+		table_body.innerHTML = "";
+	}
+
+	function AddGames(games) {
+		const table_body = document.querySelector("#games");
+		const table_data = games.map(game => `<tr id="${game.id}"><td>${game.username}</td><td>${game.date}</td></tr>`);
+		table_data.map(tr => table_body.innerHTML += tr);
+	}
+
+	function RemoveGames(ids) {
+		for (let id of ids) {
+			const table_row = document.getElementById(id);
+			table_row.remove();
+		}
+	}
 </script>
