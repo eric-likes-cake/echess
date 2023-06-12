@@ -7,6 +7,7 @@ function JsonService(filepath) {
 
 JsonService.USERDATA_FILEPATH = "data/users.json";
 JsonService.LOBBY_DATA_FILEPATH = "data/lobby.json";
+JsonService.NODEMAILER_CONFIG_FILEPATH = "data/nodemailer_config.json";
 
 function SaveJsonToDisk(filepath, json) {
     // make the directory first

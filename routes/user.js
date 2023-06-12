@@ -1,8 +1,12 @@
+const crypto = require("crypto");
+
 const JsonService = require("../echess/json_service");
 const User = require("../echess/user")
 
 const express = require("express");
 const router = express.Router();
+
+const nodemailer = require("nodemailer");
 
 router.get("/login", function(request, response, next) {
     let context = {
@@ -40,7 +44,6 @@ router.post("/login", function(request, response, next) {
         }
 
         const user = User.FromObject(results[0]);
-        console.log(user);
 
         return user.ComparePassword(form.password).then(matches => {
             if (!matches) {
@@ -125,9 +128,13 @@ router.post("/register", function(request, response, next) {
         }
 
         return User.CreateHash(form.password).then(hash => {
-            const user = new User(form.username, form.email, hash, request.session.id);
+            const user = new User(form.username, form.email, false, hash, request.session.id);
 
             return user_svc.Create(user).then(_ => {
+                
+                // I'm going to just disable this for now, because I don't have an email address set up
+                // specifically for this website.
+                // SendVerificationEmail(user);
                 response.redirect("/");
             })
         })
@@ -136,5 +143,54 @@ router.post("/register", function(request, response, next) {
         response.render("register", context)
     });
 });
+
+// should probably store this somewhere but this is good enough for now.
+const verification_keys = new Map();
+
+function SendVerificationEmail(user) {
+    if (!user.email.length) {
+        return;
+    }
+
+    // load the configuration from json
+    const svc = new JsonService(JsonService.NODEMAILER_CONFIG_FILEPATH);
+
+    svc.Read().then(results => {
+        // json service is a lazy solution to store stuff, so it only supports lists..
+        // i will switch to a better storage solution eventually.
+        const config_options = results[0];
+
+        // create a verification key
+        const verification_key = crypto.randomUUID();
+
+        // create the email message
+        const transporter = nodemailer.createTransport(config_options);
+        const mail_options = {
+            from: config_options.auth.user,
+            to: user.email,
+            subject: `Hello ${user.username}`,
+            html: EmailBody(user, "http://localhost:3000", verification_key)
+        }
+        
+        // send the email
+        transporter.sendMail(mail_options, function(error, info) {
+            if (error) {
+                console.log(error);
+            }
+            else {
+                console.log(`Email sent: ${info.response}`);
+            }
+        })
+    }).catch(console.error);
+}
+
+function EmailBody(user, host, verification_key) {
+    const link = `${host}/user/verify/${verification_key}`;
+    let html = 
+        `<p>Hello ${user.username},</p>` +
+        `<p>Please click the following link to verify your email address:</p>` +
+        `<p><a href="${link}" target="_blank">${link}</a></p>`;
+    return html;
+}
 
 module.exports = router;

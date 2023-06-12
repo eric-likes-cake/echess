@@ -9,3 +9,7 @@ table.th-left th {
 .green {
     color: green;
 }
+
+th, td {
+    padding: 5px;
+}
