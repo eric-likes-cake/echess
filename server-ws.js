@@ -2,13 +2,10 @@
 const WebSocket = require("ws");
 const WebSocketController = require("./echess/websocket_controller")
 
-// websocket server
 const wss = new WebSocket.WebSocketServer({ port: 3030 });
+const controller = new WebSocketController(wss);
 
 wss.on("connection", function (socket, request, client) {
-
-    const controller = new WebSocketController(wss);
-
     controller.InitConnection(socket);
 
     socket.on("error", console.error);

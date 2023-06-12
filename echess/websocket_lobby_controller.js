@@ -42,7 +42,7 @@ function JoinGame(socket, id) {
     // delete the lobby game
     const entry = this.wsc.state.get(socket);
     const game = this.lobby.get(id);
-    
+
     if (!this.lobby.delete(id)) {
         return;
     }
@@ -59,8 +59,8 @@ function JoinGame(socket, id) {
 
     // These calls shouldn't be necessary because they're going to leave the page when they get the game url
     // after they leave, they will disconnect and their games will be removed automatically by the web socket controller.
-    DeleteUserGames(game.session_id);
-    DeleteUserGames(entry.session_id);
+    this.DeleteUserGames(game.session_id);
+    this.DeleteUserGames(entry.session_id);
 }
 
 WebSocketLobbyController.prototype.DeleteUserGames = function(session_id) {
