@@ -100,7 +100,8 @@ router.post("/register", function(request, response, next) {
 
     const user_svc = new JsonService(JsonService.USERDATA_FILEPATH);
 
-    user_svc.Read().then((users => {
+    user_svc.Read()
+    .then(users => {
         if (users.findIndex(user => user.username === form.username) >= 0) {
             context.errors.push("This username already exists.");
         }
@@ -125,18 +126,16 @@ router.post("/register", function(request, response, next) {
             return Promise.reject(new Error(`${context.errors.length} validation errors occurred.`));
         }
 
-        return User.CreateHash(form.password).then(hash => {
-            const user = new User(form.username, form.email, false, hash, request.session.id);
-
-            return user_svc.Create(user).then(_ => {
-                
-                // I'm going to just disable this for now, because I don't have an email address set up
-                // specifically for this website.
-                // SendVerificationEmail(user);
-                response.redirect("/");
-            })
-        })
-    })).catch(error => {
+        return Promise.resolve();
+    })
+    .then(() => User.CreateHash(form.password))
+    .then(hash => user_svc.Create(new User(form.username, form.email, false, hash, request.session.id)))
+    .then(() => {
+        // I'm going to just disable this for now, because I don't have an email address set up
+        // specifically for this website.
+        // SendVerificationEmail(user);
+        response.redirect("/");
+    }).catch(error => {
         console.log(error.message);
         response.render("register", context)
     });
