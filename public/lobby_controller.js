@@ -15,10 +15,10 @@ function PlayGameClick(e) {
     const id = e.target.dataset["id"];
 
     if (color) {
-        socket.send(`play-game color: ${color}`);
+        SocketMessage("play-game", color);
     }
     else if (id) {
-        socket.send(`play-game id: ${id}`);
+        SocketMessage("play-game", id);
     }
     
     return false;
@@ -34,8 +34,8 @@ function Connect() {
     // Connection opened
     socket.addEventListener("open", (event) => {
         SetConnectionMessage("Connected.", "green");
-        socket.send("game-list");
-        socket.send(`auth ${session_id}`);
+        SocketMessage("game-list");
+        SocketMessage("auth", session_id);
     });
 
     // Listen for messages
@@ -112,4 +112,8 @@ function RemoveGames(ids) {
         const table_row = document.getElementById(id);
         table_row.remove();
     }
+}
+
+function SocketMessage(tag, ...data) {
+    socket.send(JSON.stringify([tag, ...data]));
 }
