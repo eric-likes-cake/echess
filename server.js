@@ -1,15 +1,26 @@
 const express = require("express");
 const session = require('express-session');
+const RedisStore = require("connect-redis").default;
+const {createClient} = require("redis");
+
 const lobby_router = require("./routes/lobby");
 const game_router = require("./routes/game");
 const user_router = require("./routes/user");
 
 const app = express();
+const redis_client = createClient();
+redis_client.connect().catch(console.error);
+
+const redis_store = new RedisStore({
+    client: redis_client,
+    prefix: "echess:",
+})
 
 app.use(session({
-    secret: "4bd8e1ac-0701-11ee-99b2-00155d5747af",
+    store: redis_store,
     resave: false,
-    saveUninitialized: true
+    saveUninitialized: false,
+    secret: "4bd8e1ac-0701-11ee-99b2-00155d5747af",
 }));
 
 app.set("view engine", "ejs");
