@@ -13,7 +13,7 @@
   },
   "keywords": [],
   "author": "Eric Shaw",
-  "license": "ISC",
+  "license": "copyright",
   "dependencies": {
     "bcrypt": "^5.1.0",
     "ejs": "^3.1.9",
