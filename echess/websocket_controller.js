@@ -1,5 +1,5 @@
 const LobbyController = require("./websocket_lobby_controller");
-const JsonService = require("./json_service");
+const {JsonService} = require("./json_service");
 const WebSocket = require("ws");
 
 /**

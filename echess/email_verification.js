@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
-const JsonService = require("./json_service");
+const {JsonService, LoadJsonFromDisk} = require("./json_service");
 
 const verification_keys = new Map();
 
@@ -10,12 +10,7 @@ function SendVerificationEmail(user) {
     }
 
     // load the configuration from json
-    const svc = new JsonService(JsonService.NODEMAILER_CONFIG_FILEPATH);
-
-    svc.Read().then(results => {
-        // json service is a lazy solution to store stuff, so it only supports lists..
-        // i will switch to a better storage solution eventually.
-        const config_options = results[0];
+    LoadJsonFromDisk(JsonService.NODEMAILER_CONFIG_FILEPATH).then(config_options => {
 
         // create a verification key
         const verification_key = crypto.randomUUID();
@@ -28,7 +23,7 @@ function SendVerificationEmail(user) {
             subject: `Hello ${user.username}`,
             html: EmailBody(user, "http://localhost:3000", verification_key)
         }
-        
+
         // send the email
         transporter.sendMail(mail_options, function(error, info) {
             if (error) {

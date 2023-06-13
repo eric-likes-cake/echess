@@ -26,11 +26,13 @@ function LoadJsonFromDisk(filepath) {
 }
 
 JsonService.prototype.Create = function (record) {
-    console.log("Create()")
-    return this.Read().then(data => {
-        data.push(record);
-        return SaveJsonToDisk(this.filepath, JSON.stringify(data, null, 4));
-    }, error => {console.log(error)});
+    return this.Read()
+        .then(data => {
+            data.push(record);
+            return SaveJsonToDisk(this.filepath, JSON.stringify(data, null, 4));
+        })
+        .then(() => record) // return the record again
+        .catch(error => {console.log(error)});
 }
 
 JsonService.prototype.Read = function () {
@@ -50,8 +52,6 @@ JsonService.prototype.Find = function (filter) {
 
 // returns the number of records updated
 JsonService.prototype.Update = function (filter, data) {
-    console.log("Update(%s, %s)", JSON.stringify(filter), JSON.stringify(data));
-
     const filepath = this.filepath;
 
     return this.Read()
@@ -113,4 +113,6 @@ function Matches(entry, filter) {
     return true;
 }
 
-module.exports = JsonService;
+module.exports = {
+    JsonService, LoadJsonFromDisk, SaveJsonToDisk
+};

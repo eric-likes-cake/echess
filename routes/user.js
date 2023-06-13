@@ -1,4 +1,4 @@
-const JsonService = require("../echess/json_service");
+const {JsonService} = require("../echess/json_service");
 const User = require("../echess/user")
 const {SendVerificationEmail} = require("../echess/email_verification");
 
@@ -130,7 +130,7 @@ router.post("/register", function(request, response, next) {
     })
     .then(() => User.CreateHash(form.password))
     .then(hash => user_svc.Create(new User(form.username, form.email, false, hash, request.session.id)))
-    .then(() => {
+    .then(user => {
         // I'm going to just disable this for now, because I don't have an email address set up
         // specifically for this website.
         // SendVerificationEmail(user);
