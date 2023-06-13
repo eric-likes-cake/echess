@@ -1,6 +1,7 @@
 const LobbyController = require("./websocket_lobby_controller");
 const {JsonService} = require("./json_service");
 const WebSocket = require("ws");
+const RedisService = require("./redis_service");
 
 /**
  * Websocket controller for handling requests and responses
@@ -86,7 +87,7 @@ WebSocketController.prototype.CloseConnectionCallback = function (socket) {
 
 WebSocketController.prototype.AuthenticateCommand = function (socket, session_id) {
     // set the session id and username in the state entry for this socket
-    // username is acquired from the database/json
+    // username is acquired from redis
     
     const entry = this.state.get(socket);
 
@@ -95,8 +96,16 @@ WebSocketController.prototype.AuthenticateCommand = function (socket, session_id
 
     this.socket_map.set(session_id, socket);
 
-    const user_svc = new JsonService(JsonService.USERDATA_FILEPATH);
-    user_svc.Find({session_id}).then(results => results.length ? entry.username = results[0].username : void 0).catch(console.error);
+    // look up the username of the given session id and set entry.username
+
+    const client = RedisService.GetClient("echess");
+    client.get(`echess:${session_id}`)
+        .then(sess => {
+            if (sess) {
+                entry.username = JSON.parse(sess).username
+            }
+        })
+        .catch(console.error);
 }
 
 // common functions

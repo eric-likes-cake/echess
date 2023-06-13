@@ -48,7 +48,6 @@ router.post("/login", function(request, response, next) {
                 return Promise.reject(new Error("Password was invalid."));
             }
             request.session.username = user.username;
-            users.Update({username: form.username}, {session_id: request.session.id}).catch(error => console.log(error));
             response.redirect("/");
         });
     }).catch(error => {
@@ -129,8 +128,9 @@ router.post("/register", function(request, response, next) {
         return Promise.resolve();
     })
     .then(() => User.CreateHash(form.password))
-    .then(hash => user_svc.Create(new User(form.username, form.email, false, hash, request.session.id)))
+    .then(hash => user_svc.Create(new User(form.username, form.email, false, hash)))
     .then(user => {
+        request.session.username = user.username;
         // I'm going to just disable this for now, because I don't have an email address set up
         // specifically for this website.
         // SendVerificationEmail(user);

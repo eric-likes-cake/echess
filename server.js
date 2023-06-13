@@ -18,9 +18,9 @@ const redis_store = new RedisStore({
 
 app.use(session({
     store: redis_store,
-    resave: false,
-    saveUninitialized: false,
-    secret: "4bd8e1ac-0701-11ee-99b2-00155d5747af",
+    resave: false, // required: force lightweight session keep alive (touch)
+    saveUninitialized: false, // recommended: only save session when data exists
+    secret: "4bd8e1ac-0701-11ee-99b2-00155d5747af", // probably should be kept secret
 }));
 
 app.set("view engine", "ejs");
