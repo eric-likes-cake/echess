@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
-const {JsonService, LoadJsonFromDisk} = require("./json_service");
+const JsonService = require("./json_service");
 
 const verification_keys = new Map();
 
@@ -10,7 +10,7 @@ function SendVerificationEmail(user) {
     }
 
     // load the configuration from json
-    LoadJsonFromDisk(JsonService.NODEMAILER_CONFIG_FILEPATH).then(config_options => {
+    JsonService.LoadJsonFromDisk(JsonService.NODEMAILER_CONFIG_FILEPATH).then(config_options => {
 
         // create a verification key
         const verification_key = crypto.randomUUID();
@@ -46,8 +46,8 @@ function VerifyEmail(key) {
     const verified = true;
     verification_keys.delete(key);
 
-    const svc = new JsonService(JsonService.USERDATA_FILEPATH);
-    return svc.Update({email}, {verified}).catch(console.error);
+    // const svc = new JsonService(JsonService.USERDATA_FILEPATH);
+    // return svc.Update({email}, {verified}).catch(console.error);
 }
 
 function EmailBody(user, host, key) {
