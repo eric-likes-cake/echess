@@ -100,7 +100,7 @@ function AddGames(games) {
                 <td>${game.username}</td>
                 <td>${game.color}</td>
                 <td>${game.date}</td>
-                <td><a href="#" class="play-game-link" data-id="${game.id}">Join Game</a></td>
+                <td><a href="/game/${game.id}/confirm" class="play-game-link" data-id="${game.id}">Join Game</a></td>
             </tr>`
         )
     });

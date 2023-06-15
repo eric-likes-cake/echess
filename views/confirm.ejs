@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<link rel="stylesheet" href="/base.css">
+		<title><%= title %></title>
+	</head>
+	<body>
+		<h1>Join Game</h1>
+		<table class="th-left" border="1">
+			<tr>
+				<th>Player:</th>
+				<td><%= lobby_game.username %></td>
+			</tr>
+			<tr>
+				<th>Game Option:</th>
+				<td><%= lobby_game.color %></td>
+			</tr>
+		</table>
+		<a href="#" data-id="<%= lobby_game.id %>">Join game</a>
+	</body>
+</html>

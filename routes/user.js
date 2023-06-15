@@ -27,7 +27,6 @@ router.get("/login", function(request, response, next) {
 router.post("/login", function(request, response, next) {
 
     const form = request.body;
-    form.username = form.username.toLowerCase();
 
     let context = {
         title: "Log in",
@@ -39,13 +38,13 @@ router.post("/login", function(request, response, next) {
     const client = RedisService.GetClient("echess");
 
     User.LoadUserFromRedis({username: form.username}, client).then(user => {
-        return user.ComparePassword(form.password);
+        return user.ComparePassword(form.password)
     })
     .then(matches => {
         if (!matches) {
             return Promise.reject(new Error("Password was invalid."));
         }
-        request.session.username = user.username;
+        request.session.username = form.username;
         response.redirect("/");
     })
     .catch(error => {

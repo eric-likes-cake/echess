@@ -16,7 +16,7 @@ RedisService.SetClient("echess", redis_client);
 
 const redis_store = new RedisStore({
     client: redis_client,
-    prefix: "echess:session",
+    prefix: "echess:session:",
 })
 
 app.use(session({
