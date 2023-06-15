@@ -23,25 +23,11 @@ User.prototype.ComparePassword = function(password) {
  */
 function LoadUserFromRedis(filter, client) {
     let {username, id} = filter;
-    let promise = Promise.resolve(id)
 
-    if (!id) {
-        promise = client.GET(`echess:user_id:${username}`).then(result => {
-            if (result) {
-                return id = result;
-            }
-            return Promise.reject(new Error("User ID not found. Username: " + username));
-        })
-    }
-        
-    return promise.then(id => client.HVALS(`echess:user:${id}`))
-        .then(array => {
-            if (array?.length) {
-                return array;
-            }
-            return Promise.reject(new Error("User ID not found: " + id));
-        })
-        .then(array => new User(array[0], array[1], array[2], array[3]));
+    return (id?.length ? Promise.resolve(id) : client.GET(`echess:user_id:${username}`))
+        .then(id => client.HVALS(`echess:user:${id}`))
+        .then(array => array?.length > 0 ? array : Promise.reject(new Error(`User not found: ${JSON.stringify(filter)}`)))
+        .then(array => new User(array[0], array[1], array[2], array[3]))
 }
 
 /**
@@ -54,12 +40,7 @@ function SaveUserToRedis(user, client) {
     return client.MULTI()
         .SET(`echess:user_id:${user.username}`, user.id)
         .HSET(`echess:user:${user.id}`, Object.entries(user).flat())
-        .EXEC().then(results => {
-            if (results[0] != "OK") {
-                return Promise.reject("User name")
-            }
-            return client.SAVE();
-        })
+        .EXEC().then(results => results[0] == "OK" ? client.SAVE() : Promise.reject("Error saving user"))
 }
 
 module.exports = {

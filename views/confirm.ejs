@@ -17,6 +17,6 @@
 				<td><%= lobby_game.color %></td>
 			</tr>
 		</table>
-		<a href="#" data-id="<%= lobby_game.id %>">Join game</a>
+		<a href="/game/<%= lobby_game.id %>/confirm" class="play-game-link" data-id="<%= lobby_game.id %>">Join game</a>
 	</body>
 </html>

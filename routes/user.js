@@ -54,6 +54,26 @@ router.post("/login", function(request, response, next) {
     })
 });
 
+router.param("id", (request, response, next, id) => {
+    request.id = id
+    next();
+});
+
+router.get("/user/:id", function(request, response, next) {
+
+    let context = {
+        title: "User",
+        error: ""
+    };
+
+    // redis database client
+    const client = RedisService.GetClient("echess");
+
+    User.LoadUserFromRedis({id: request.id}, client)
+        .then(user => response.send(JSON.stringify(user)))
+        .catch(error => response.send(error.message));
+});
+
 router.get("/logout", function(request, response, next) {
     request.session.username = "";
     request.session.destroy(err => {
