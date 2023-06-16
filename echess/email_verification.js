@@ -2,9 +2,8 @@ const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const JsonService = require("./json_service");
 
-const verification_keys = new Map();
 
-function SendVerificationEmail(user) {
+function SendVerificationEmail(user, client) {
     if (!user.email.length) {
         return;
     }
@@ -31,23 +30,11 @@ function SendVerificationEmail(user) {
             }
             else {
                 console.log(`Email sent: ${info.response}`);
-                verification_keys.set(verification_key, user.email);
+                const svc = new RedisService(client);
+                svc.SetVerificationToken(verification_key, user.email);
             }
         })
     }).catch(console.error);
-}
-
-function GetEmail(key) {
-    return verification_keys.get(key);
-}
-
-function VerifyEmail(key) {
-    const email = verification_keys.get(key);
-    const verified = true;
-    verification_keys.delete(key);
-
-    // const svc = new JsonService(JsonService.USERDATA_FILEPATH);
-    // return svc.Update({email}, {verified}).catch(console.error);
 }
 
 function EmailBody(user, host, key) {
@@ -59,8 +46,33 @@ function EmailBody(user, host, key) {
     return html;
 }
 
+class RedisService {
+    constructor(client) {
+        this.client = client;
+    }
+
+    SetVerificationToken(token, email) {
+        return this.client.SET(`echess:email_token:${token}`, email);
+    }
+
+    GetEmailFromToken(token) {
+        return this.client.GET(`echess:email_token:${token}`);
+    }
+
+    VerifyEmail(email) {
+        return this.client.SADD("echess:verified_email", email);
+    }
+
+    RemoveEmail(email) {
+        return this.client.SREM("echess:verified_email", email);
+    }
+
+    EmailVerified(email) {
+        return this.client.SISMEMBER("echess:verified_email", email);
+    }
+}
+
 module.exports = {
     SendVerificationEmail,
-    GetEmail,
-    VerifyEmail
+    RedisService
 }

@@ -1,18 +1,20 @@
 const express = require("express");
 const session = require('express-session');
+const {createClient} = require("redis");
 const RedisStore = require("connect-redis").default;
 
-const RedisService = require("./echess/redis_service");
 const lobby_router = require("./routes/lobby");
 const game_router = require("./routes/game");
 const user_router = require("./routes/user");
 
 const app = express();
-// store redis service in the app.locals so we can access it during a request without reconnecting
-app.locals.svc = new RedisService.CreateWithClient();
+// store redis client in the app.locals so we can access it during a request without reconnecting
+const client = createClient();
+client.connect().catch(console.error);
+app.locals.client = client;
 
 const redis_store = new RedisStore({
-    client: app.locals.svc.client,
+    client: client,
     prefix: "echess:session:",
 })
 

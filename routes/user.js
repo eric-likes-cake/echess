@@ -38,9 +38,9 @@ router.post("/login", function(request, response, next) {
         user: new User.User()
     };
 
-    const redis_svc = request.app.locals.svc;
+    const svc = new User.RedisService(request.app.locals.client);
 
-    redis_svc.LoadUserFromRedis({username: form.username}).then(user => {
+    svc.LoadUser({username: form.username}).then(user => {
         ref.user = user;
         return user.ComparePassword(form.password)
     })
@@ -49,7 +49,7 @@ router.post("/login", function(request, response, next) {
             return Promise.reject(new Error("Password was invalid."));
         }
         request.session.username = ref.user.username;
-        return redis_svc.IsAdmin(ref.user.id);
+        return svc.IsAdmin(ref.user.id);
     })
     .then(admin => {
         console.log(admin);
@@ -75,7 +75,9 @@ router.get("/user/:id", function(request, response, next) {
         return;
     }
 
-    request.app.locals.svc.LoadUserFromRedis({id: request.id})
+    const svc = new User.RedisService(request.app.locals.client);
+
+    svc.LoadUser({id: request.id})
         .then(user => response.json(user))
         .catch(error => response.send(error.message));
 });
@@ -120,9 +122,9 @@ router.post("/register", function(request, response, next) {
         errors: []
     };
 
-    const redis_svc = request.app.locals.svc;
+    const svc = new User.RedisService(request.app.locals.client);
 
-    redis_svc.UsernameExists(form.username).then(result => {
+    svc.UsernameExists(form.username).then(result => {
         console.log(result);
 
         if (result) {
@@ -155,13 +157,13 @@ router.post("/register", function(request, response, next) {
     .then(() => User.CreateHash(form.password))
     .then(hash => {
         const user = new User.User(crypto.randomUUID(), form.username, form.email, hash)
-        return redis_svc.SaveUserToRedis(user).then(() => user);
+        return svc.SaveUser(user).then(() => user);
     })
     .then(user => {
         request.session.username = user.username;
         // I'm going to just disable this for now, because I don't have an email address set up
         // specifically for this website.
-        // SendVerificationEmail(user);
+        // SendVerificationEmail(user, request.app.locals.client);
         response.redirect("/");
     }).catch(error => {
         console.log(error.message);

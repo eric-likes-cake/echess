@@ -3,11 +3,12 @@ const WebSocket = require("ws");
 const {createClient} = require("redis");
 
 const WebSocketController = require("./echess/websocket_controller")
-const RedisService = require("./echess/redis_service");
 
-// create the web socket server and redis client service for the web socket controller
+// create the web socket server and redis_client for the web socket controller
 const wss = new WebSocket.WebSocketServer({ port: 3030 });
-const controller = new WebSocketController(wss, RedisService.CreateWithClient());
+const redis_client = createClient();
+redis_client.connect().catch(console.error);
+const controller = new WebSocketController(wss, redis_client);
 
 wss.on("connection", function (socket, request, client) {
     controller.InitConnection(socket);
