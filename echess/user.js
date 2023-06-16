@@ -16,33 +16,6 @@ User.prototype.ComparePassword = function(password) {
     return bcrypt.compare(password, this.password_hash);
 }
 
-/**
- * Loads a user and returns a promise.
- * @param {object} filter {username} or {id} 
- * @param {*} client redis client
- */
-function LoadUserFromRedis(filter, client) {
-    let {username, id} = filter;
-
-    return (id?.length ? Promise.resolve(id) : client.GET(`echess:user_id:${username}`))
-        .then(id => client.HVALS(`echess:user:${id}`))
-        .then(array => array?.length > 0 ? array : Promise.reject(new Error(`User not found: ${JSON.stringify(filter)}`)))
-        .then(array => new User(array[0], array[1], array[2], array[3]))
-}
-
-/**
- * Saves the given user and returns a promise.
- * @param {User} user 
- * @param {*} client redis client
- * @returns {Promise}
- */
-function SaveUserToRedis(user, client) {
-    return client.MULTI()
-        .SET(`echess:user_id:${user.username}`, user.id)
-        .HSET(`echess:user:${user.id}`, Object.entries(user).flat())
-        .EXEC().then(results => results[0] == "OK" ? client.SAVE() : Promise.reject("Error saving user"))
-}
-
 module.exports = {
-    User, LoadUserFromRedis, SaveUserToRedis, CreateHash
+    User, CreateHash
 };

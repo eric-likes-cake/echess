@@ -1,6 +1,5 @@
 const User = require("../echess/user")
 const {SendVerificationEmail} = require("../echess/email_verification");
-const RedisService = require("../echess/redis_service");
 
 const crypto = require("crypto");
 const express = require("express");
@@ -31,20 +30,30 @@ router.post("/login", function(request, response, next) {
     let context = {
         title: "Log in",
         form: form,
-        error: ""
+        error: "",
     };
 
-    // redis database client
-    const client = RedisService.GetClient("echess");
+    // reference object for the promises
+    const ref = {
+        user: new User.User()
+    };
 
-    User.LoadUserFromRedis({username: form.username}, client).then(user => {
+    const redis_svc = request.app.locals.svc;
+
+    redis_svc.LoadUserFromRedis({username: form.username}).then(user => {
+        ref.user = user;
         return user.ComparePassword(form.password)
     })
     .then(matches => {
         if (!matches) {
             return Promise.reject(new Error("Password was invalid."));
         }
-        request.session.username = form.username;
+        request.session.username = ref.user.username;
+        return redis_svc.IsAdmin(ref.user.id);
+    })
+    .then(admin => {
+        console.log(admin);
+        request.session.admin = admin
         response.redirect("/");
     })
     .catch(error => {
@@ -61,16 +70,13 @@ router.param("id", (request, response, next, id) => {
 
 router.get("/user/:id", function(request, response, next) {
 
-    let context = {
-        title: "User",
-        error: ""
-    };
+    if (!request.session.admin) {
+        response.status(401).send("401: You are not authorized to make this request.")
+        return;
+    }
 
-    // redis database client
-    const client = RedisService.GetClient("echess");
-
-    User.LoadUserFromRedis({id: request.id}, client)
-        .then(user => response.send(JSON.stringify(user)))
+    request.app.locals.svc.LoadUserFromRedis({id: request.id})
+        .then(user => response.json(user))
         .catch(error => response.send(error.message));
 });
 
@@ -114,10 +120,9 @@ router.post("/register", function(request, response, next) {
         errors: []
     };
 
-    // redis database client
-    const client = RedisService.GetClient("echess");
+    const redis_svc = request.app.locals.svc;
 
-    client.EXISTS(`echess:userid:${form.username}`).then(result => {
+    redis_svc.UsernameExists(form.username).then(result => {
         console.log(result);
 
         if (result) {
@@ -150,7 +155,7 @@ router.post("/register", function(request, response, next) {
     .then(() => User.CreateHash(form.password))
     .then(hash => {
         const user = new User.User(crypto.randomUUID(), form.username, form.email, hash)
-        return User.SaveUserToRedis(user, client).then(() => user);
+        return redis_svc.SaveUserToRedis(user).then(() => user);
     })
     .then(user => {
         request.session.username = user.username;

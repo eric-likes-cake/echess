@@ -1,13 +1,14 @@
 const LobbyController = require("./websocket_lobby_controller");
 const WebSocket = require("ws");
-const RedisService = require("./redis_service");
 
 /**
  * Websocket controller for handling requests and responses
  * @param {WebSocketServer} wss Web socket server
+ * @param svc Redis service
  */
-function WebSocketController(wss) {
+function WebSocketController(wss, svc) {
     this.wss = wss;
+    this.svc = svc;
 
     // socket -> state object for each user
     this.state = new Map();
@@ -97,8 +98,7 @@ WebSocketController.prototype.AuthenticateCommand = function (socket, session_id
 
     // look up the username of the given session id and set entry.username
 
-    const client = RedisService.GetClient("echess");
-    client.get(`echess:session:${session_id}`)
+    this.svc.client.GET(`echess:session:${session_id}`)
         .then(session => {
             if (session) {
                 entry.username = JSON.parse(session).username
