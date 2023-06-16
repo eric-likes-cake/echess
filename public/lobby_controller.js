@@ -85,6 +85,9 @@ function HandleServerMessage(message) {
     else if (tag === "remove-games") {
         RemoveGames(data);
     }
+    else if (tag === "game-url") {
+        window.location.assign(data);
+    }
 }
 
 function ClearGames() {
@@ -100,7 +103,7 @@ function AddGames(games) {
                 <td>${game.username}</td>
                 <td>${game.color}</td>
                 <td>${game.date}</td>
-                <td><a href="/game/${game.id}/confirm" class="play-game-link" data-id="${game.id}">Join Game</a></td>
+                <td><a href="/game/${game.id}" class="play-game-link" data-id="${game.id}">Join Game</a></td>
             </tr>`
         )
     });

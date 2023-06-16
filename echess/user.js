@@ -28,9 +28,9 @@ class RedisService {
     LoadUser(filter) {
         let {username, id} = filter;
         return (id?.length ? Promise.resolve(id) : this.client.GET(`echess:user_id:${username}`))
-            .then(id => this.client.HVALS(`echess:user:${id}`))
-            .then(array => array?.length > 0 ? array : Promise.reject(new Error(`User not found: ${JSON.stringify(filter)}`)))
-            .then(array => new User(array[0], array[1], array[2], array[3]))
+            .then(id => this.client.HGETALL(`echess:user:${id}`))
+            .then(object => Object.keys(object).length ? object : Promise.reject(new Error(`User not found: ${JSON.stringify(filter)}`)))
+            .then(object => Object.assign(new User(), object));
     }
     
     SaveUser(user) {
@@ -41,11 +41,11 @@ class RedisService {
     }
 
     MakeAdmin(id) {
-        return this.client.SADD("echess:admins", id).SAVE();
+        return Promise.all([this.client.SADD("echess:admins", id), this.client.SAVE()]);
     }
 
     RevokeAdmin(id) {
-        return this.client.SREM("echess:admins", id).SAVE();
+        return Promise.all([this.client.SREM("echess:admins", id), this.client.SAVE()]);
     }
 
     IsAdmin(id) {

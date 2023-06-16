@@ -28,6 +28,7 @@ WebSocketController.prototype.InitConnection = function(socket) {
     this.state.set(socket, {
         session_id: "",
         username: "",
+        user_id: "",
     });
 }
 
@@ -94,13 +95,21 @@ WebSocketController.prototype.AuthenticateCommand = function (socket, session_id
 
     entry.session_id = session_id;
     entry.username = "Anonymous User";
+    entry.user_id = "";
 
     this.socket_map.set(session_id, socket);
 
     // look up the username of the given session id and set entry.username
     const svc = new User.RedisService(this.client);
     svc.GetSession(session_id)
-        .then(session => session.username?.length ? entry.username = session.username : void 0)
+        .then(session => {
+            if (session.username?.length) {
+                entry.username = session.username;
+            }
+            if (session.user_id?.length) {
+                entry.user_id = session.user_id;
+            }
+        })
         .catch(console.error);
 }
 

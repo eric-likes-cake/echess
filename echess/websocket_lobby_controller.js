@@ -1,5 +1,7 @@
 const crypto = require("crypto");
 const LobbyGame = require("./lobby_game");
+const User = require("./user");
+const Game = require("./game");
 const WebSocketController = require("./websocket_controller");
 
 /**
@@ -38,29 +40,60 @@ function CreateLobbyGame(socket, color) {
 }
 
 function JoinGame(socket, id) {
-
-    // delete the lobby game
-    const entry = this.wsc.state.get(socket);
-    const game = this.lobby.get(id);
+    // copy and delete the lobby game
+    const lg = this.lobby.get(id);
 
     if (!this.lobby.delete(id)) {
         return;
     }
 
-    // send both players the game url to join the game
-    const response = this.wsc.Response("game-url", `/game/${id}`)
-    socket.send(response);
-    if (this.wsc.socket_map.has(game.session_id)) {
-        const other = this.wsc.socket_map.get(game.session_id);
-        other.send(response);
+    // determine who the two users are, this user and the one who created the game
+    const socket1 = socket;
+    const user1 = this.wsc.state.get(socket1);
+    const socket2 = this.wsc.socket_map.get(lg.session_id);
+    const user2 = this.wsc.state.get(socket2);
+
+    // use the user id if they're logged in, otherwise the session id.
+    const joiner = user1.user_id?.length ? user1.user_id : user1.session_id;
+    const creator = user2.user_id?.length ? user2.user_id : user2.session_id;
+
+    let white, black;
+
+    // choose who will be white and who will be black
+    if (lg.color === "white") {
+        white = creator;
+        black = joiner;
     }
+    else if (lg.color === "black") {
+        white = joiner;
+        black = creator;
+    }
+    else {
+        white = RandomNumber(2) === 0 ? joiner : creator;
+        black = white === joiner ? creator : joiner;
+    }
+
+    const game = new Game.Game(lg.id, white, black, []);
+    const game_svc = new Game.RedisService(this.wsc.client);
+
+    game_svc.Create(game).then(() => {
+        // send both players the game url to join the game
+        const response = this.wsc.Response("game-url", `/game/${id}`)
+        socket1.send(response);
+        socket2.send(response);
+    })
+    .catch(console.error);
 
     this.wsc.Broadcast("remove-games", [id]);
 
-    // These calls shouldn't be necessary because they're going to leave the page when they get the game url
+    // These calls shouldn't be necessary because they're going to leave the page when they get the game url.
     // after they leave, they will disconnect and their games will be removed automatically by the web socket controller.
-    this.DeleteUserGames(game.session_id);
-    this.DeleteUserGames(entry.session_id);
+    // this.DeleteUserGames(user1.session_id);
+    // this.DeleteUserGames(user2.session_id);
+}
+
+function RandomNumber(max) {
+    return Math.floor(Math.random() * max);
 }
 
 WebSocketLobbyController.prototype.DeleteUserGames = function(session_id) {

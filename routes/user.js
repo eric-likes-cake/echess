@@ -49,6 +49,7 @@ router.post("/login", function(request, response, next) {
             return Promise.reject(new Error("Password was invalid."));
         }
         request.session.username = ref.user.username;
+        request.session.user_id = ref.user.id;
         return svc.IsAdmin(ref.user.id);
     })
     .then(admin => {
