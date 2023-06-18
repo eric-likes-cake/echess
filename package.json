@@ -8,8 +8,10 @@
   "main": "server.js",
   "scripts": {
     "test": "jest",
-    "echess": "nodemon server.js --ignore public --ignore data",
-    "echess-ws": "nodemon server-ws.js --ignore public --ignore data"
+    "echess": "pm2 start server.js",
+    "echess-ws": "pm2 start server-ws.js",
+    "dev": "nodemon server.js --ignore public --ignore data",
+    "dev-ws": "nodemon server-ws.js --ignore public --ignore data"
   },
   "keywords": [],
   "author": "Eric Shaw",

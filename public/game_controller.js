@@ -1,6 +1,7 @@
 import { Chess } from "./modules/chess.js"
 
 // load options from the body data set
+const hostname = window.location.hostname;
 const body = document.querySelector("body");
 const session_id = body.dataset["sessionId"];
 const color = body.dataset["color"];
@@ -53,7 +54,7 @@ SetConnectionMessage("Not connected.");
 let socket = Connect();
 
 function Connect() {
-    const socket = new WebSocket("ws://localhost:3030");
+    const socket = new WebSocket(`ws://${hostname}:3030`);
 
     // Connection opened
     socket.addEventListener("open", (event) => {
