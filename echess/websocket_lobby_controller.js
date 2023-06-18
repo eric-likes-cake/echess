@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const WebSocket = require("ws");
 const LobbyGame = require("./lobby_game");
 const User = require("./user");
 const Game = require("./game");
@@ -11,6 +12,16 @@ function WebSocketLobbyController(wsc) {
     // game id -> game.
     this.lobby = new Map();
     this.wsc = wsc;
+    // session_id -> socket. for broadcasting games to
+    this.lobby_users = new Map();
+}
+
+WebSocketLobbyController.prototype.JoinLobbyCommand = function(socket, session_id) {
+    this.lobby_users.set(session_id, socket);
+}
+
+WebSocketLobbyController.prototype.UserDisconnected = function(session_id) {
+    this.lobby_users.delete(session_id);
 }
 
 WebSocketLobbyController.prototype.PlayGameCommand = function(socket, data) {
@@ -36,16 +47,12 @@ function CreateLobbyGame(socket, color) {
     const game = new LobbyGame(crypto.randomUUID(), session_id, username, new Date(), color);
     this.lobby.set(game.id, game);
 
-    this.wsc.Broadcast("new-game", game.ViewData());
+    this.BroadcastToLobby("new-game", game.ViewData());
 }
 
 function JoinGame(socket, id) {
     // copy and delete the lobby game
     const lg = this.lobby.get(id);
-
-    if (!this.lobby.delete(id)) {
-        return;
-    }
 
     // determine who the two users are, this user and the one who created the game
     const socket1 = socket;
@@ -83,13 +90,6 @@ function JoinGame(socket, id) {
         socket2.send(response);
     })
     .catch(console.error);
-
-    this.wsc.Broadcast("remove-games", [id]);
-
-    // These calls shouldn't be necessary because they're going to leave the page when they get the game url.
-    // after they leave, they will disconnect and their games will be removed automatically by the web socket controller.
-    // this.DeleteUserGames(user1.session_id);
-    // this.DeleteUserGames(user2.session_id);
 }
 
 function RandomNumber(max) {
@@ -105,7 +105,15 @@ WebSocketLobbyController.prototype.DeleteUserGames = function(session_id) {
         }
     }
     const ids = games.map(game => game.id);
-    this.wsc.Broadcast("remove-games", ids);
+    this.BroadcastToLobby("remove-games", ids);
+}
+
+WebSocketLobbyController.prototype.BroadcastToLobby = function(tag, ...args) {
+    this.lobby_users.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(this.wsc.Response(tag, ...args))
+        }
+    });
 }
 
 module.exports = WebSocketLobbyController

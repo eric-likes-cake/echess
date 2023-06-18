@@ -36,6 +36,7 @@ function Connect() {
         SetConnectionMessage("Connected.", "green");
         SocketMessage("game-list");
         SocketMessage("auth", session_id);
+        SocketMessage("lobby");
     });
 
     // Listen for messages

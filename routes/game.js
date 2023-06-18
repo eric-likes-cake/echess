@@ -14,6 +14,7 @@ router.get("/:game_id", (request, response, next) => {
 
     let context = {
         title: "user1 vs user2",
+        session_id: request.session.id,
     };
 
     // get the game from redis (game not lobby game)
@@ -26,30 +27,41 @@ router.get("/:game_id", (request, response, next) => {
     game_svc.Load(request.game_id).then(game => {
         console.log(game);
         context.game = game;
-        return GetUserNames(user_svc, game);
+        return GetUsers(user_svc, game);
     })
     .then(users => {
-        context.white = users[0]?.username || "Anonymous User";
-        context.black = users[1]?.username || "Anonymous User";
-        context.title = context.white + " vs " + context.black;
+        const white = users[0]?.username || "Anonymous User";
+        const black = users[1]?.username || "Anonymous User";
+        context.title = white + " vs " + black;
     })
     .then(() => {
         console.log(context);
 
-        if (context.game.IsPlayer(request.session.user_id, request.session.id)) {
+        if (context.game.IsWhite(request.session.user_id, request.session.id)) {
+            context.color = "white";
+            response.render("game", context);
+        }
+        else if (context.game.IsBlack(request.session.user_id, request.session.id)) {
+            context.color = "black"
             response.render("game", context);
         }
         else {
+            context.color = "white";
             response.render("spectator", context);
         }
     })
     .catch(error => {
-        console.log(error.message);
-        response.redirect("/");
+        console.log(error);
+        if (error.message.indexOf("Game id not found") >= 0) {
+            response.status(404).send(error.message);
+        }
+        else {
+            response.redirect("/");
+        }
     });
 });
 
-async function GetUserNames(user_svc, game) {
+async function GetUsers(user_svc, game) {
     const user1 = await user_svc.LoadUser({id: game.white_id}).catch(console.error);
     const user2 = await user_svc.LoadUser({id: game.black_id}).catch(console.error);
     return [user1, user2];

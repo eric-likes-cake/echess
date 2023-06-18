@@ -13,3 +13,7 @@ table.th-left th {
 th, td {
     padding: 5px;
 }
+
+.bold {
+    font-weight: bold;
+}

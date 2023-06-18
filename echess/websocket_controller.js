@@ -1,4 +1,5 @@
 const LobbyController = require("./websocket_lobby_controller");
+const GameController = require("./websocket_game_controller").default;
 const WebSocket = require("ws");
 const User = require("./user");
 
@@ -17,11 +18,21 @@ function WebSocketController(wss, client) {
     this.socket_map = new Map();
 
     this.lobby_controller = new LobbyController(this);
+    this.game_controller = new GameController(this);
 
+    // web socket command handlers
     this.commands = new Map();
     this.commands.set("auth", this.AuthenticateCommand.bind(this));
+    
+    // lobby controller handlers
+    this.commands.set("lobby", this.lobby_controller.JoinLobbyCommand.bind(this.lobby_controller));
     this.commands.set("play-game", this.lobby_controller.PlayGameCommand.bind(this.lobby_controller));
     this.commands.set("game-list", this.lobby_controller.ListGameCommand.bind(this.lobby_controller));
+
+    // game controller handlers
+    this.commands.set("spectate", this.game_controller.SpectateGameCommand.bind(this.game_controller));
+    this.commands.set("play-game2", this.game_controller.PlayGameCommand.bind(this.game_controller));
+    this.commands.set("move", this.game_controller.MoveCommand.bind(this.game_controller));
 }
 
 WebSocketController.prototype.InitConnection = function(socket) {
@@ -46,11 +57,11 @@ WebSocketController.prototype.SocketMessageCallback = function (socket, data) {
 
     if (!this.commands.has(tag)) {
         socket.send(this.Response("error", "Not a valid request."));
-        return;
     }
-
-    const command = this.commands.get(tag)
-    command(socket, ...args);
+    else {
+        const command = this.commands.get(tag)
+        command(socket, ...args);
+    }
     
     console.log("===========================");
 }
@@ -85,6 +96,8 @@ WebSocketController.prototype.CloseConnectionCallback = function (socket) {
 
     // delete the user's games
     this.lobby_controller.DeleteUserGames(entry.session_id);
+    this.lobby_controller.UserDisconnected(socket);
+    this.game_controller.UserDisconnected(socket);
 }
 
 WebSocketController.prototype.AuthenticateCommand = function (socket, session_id) {

@@ -3,10 +3,19 @@
 	<head>
 		<meta charset="UTF-8">
 		<link rel="stylesheet" href="/base.css">
+		<link rel="stylesheet" href="/game/chessboard-1.0.0.min.css">
+		<!-- jQuery is a dependency of chessboardjs -->
+		<script src="/jquery-3.5.1.min.js"></script>
+		<script src="/game/chessboard-1.0.0.min.js"></script>
 		<title><%= title %></title>
 	</head>
-	<body>
+	<body data-color="<%= color %>" data-session-id="<%= session_id %>" data-game-id="<%= game.id %>">
 		<h1><%= title %></h1>
 		<p>You are playing.</p>
+		<div id="board" style="width: 500px"></div>
+		<p class="bold">Connection Status: <span id="connection-status"></span></p>
 	</body>
 </html>
+
+
+<script type="module" src="/game_controller.js"></script>

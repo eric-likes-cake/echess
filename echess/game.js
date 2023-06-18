@@ -59,7 +59,6 @@ class RedisService {
         }
 
         const game = Object.assign(new Game(), object);
-
         const len = await this.client.LLEN(`echess:game:moves:${game_id}`)
         game.moves = await this.client.LRANGE(`echess:game:moves:${game_id}`, 0, len);
 
