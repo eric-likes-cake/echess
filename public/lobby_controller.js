@@ -30,7 +30,7 @@ SetConnectionMessage("Not connected.");
 let socket = Connect();
 
 function Connect() {
-    const socket = new WebSocket(`ws://${hostname}:3030`);
+    const socket = new WebSocket(`wss://${hostname}:3030`);
 
     // Connection opened
     socket.addEventListener("open", (event) => {

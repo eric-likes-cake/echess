@@ -2,6 +2,8 @@ const express = require("express");
 const session = require('express-session');
 const {createClient} = require("redis");
 const RedisStore = require("connect-redis").default;
+const fs = require("node:fs");
+const https = require("node:https");
 
 const lobby_router = require("./routes/lobby");
 const game_router = require("./routes/game");
@@ -41,4 +43,12 @@ if (!port) {
     port = 3000;
 }
 
-app.listen(port)
+// app.listen(port)
+
+const private_key = fs.readFileSync("data/cert.key");
+const certificate = fs.readFileSync("data/cert.crt");
+
+https.createServer({
+    key: private_key,
+    cert: certificate
+}, app).listen(port);
