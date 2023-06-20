@@ -21,9 +21,8 @@ class WebsocketGameController {
     }
 
     PlayGameCommand(socket, game_id) {
-        const {session_id, user_id} = this.wsc.state.get(socket);
-
         this.game_svc.Load(game_id).then(game => {
+            const {session_id, user_id} = this.wsc.state.get(socket);
 
             if (!game.IsPlayer(user_id, session_id)) {
                 throw new Error("User is not a player for this game id.");

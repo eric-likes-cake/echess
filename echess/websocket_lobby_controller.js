@@ -16,7 +16,8 @@ function WebSocketLobbyController(wsc) {
     this.lobby_users = new Map();
 }
 
-WebSocketLobbyController.prototype.JoinLobbyCommand = function(socket, session_id) {
+WebSocketLobbyController.prototype.JoinLobbyCommand = function(socket) {
+    const {session_id} = this.wsc.state.get(socket);
     this.lobby_users.set(session_id, socket);
 }
 
