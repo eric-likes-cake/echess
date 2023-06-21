@@ -1,5 +1,4 @@
-
-class SocketController {
+export default class SocketController {
 
     constructor(url, connected_node, session_id) {
         this.url = url;

@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="UTF-8">
-		<link rel="stylesheet" href="/base.css">
+		<link rel="stylesheet" href="/style/base.css">
 		<link rel="stylesheet" href="/game/chessboard-1.0.0.min.css">
 		<!-- jQuery is a dependency of chessboardjs -->
 		<script src="/jquery-3.5.1.min.js"></script>
@@ -17,11 +17,9 @@
 	</body>
 </html>
 
-
-<script src="/socket_controller.js"></script>
-
 <script type="module">
-	import GameController from "/game_controller.js"
+	import SocketController from "/controllers/socket_controller.js"
+	import GameController from "/controllers/game_controller.js"
 
 	const body = document.querySelector("body");
 	const session_id = body.dataset["sessionId"];

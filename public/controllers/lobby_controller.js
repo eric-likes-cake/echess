@@ -1,5 +1,4 @@
-
-class LobbyController {
+export default class LobbyController {
 
     constructor(socket_ctrl, game_table) {
         this.socket_ctrl = socket_ctrl;

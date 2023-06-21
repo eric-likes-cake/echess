@@ -1,4 +1,4 @@
-import { Chess } from "./modules/chess.js"
+import { Chess } from "/modules/chess.js"
 
 export default class GameController {
     constructor(socket_ctrl, board_id, color, game_id, is_player) {

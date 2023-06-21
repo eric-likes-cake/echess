@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="UTF-8">
-		<link rel="stylesheet" href="/base.css">
+		<link rel="stylesheet" href="/style/base.css">
 		<title><%= title %></title>
 	</head>
 	<body data-session-id="<%= session_id %>">
@@ -48,9 +48,10 @@
 	</body>
 </html>
 
-<script src="/socket_controller.js"></script>
-<script src="/lobby_controller.js"></script>
-<script>
+<script type="module">
+	import SocketController from "/controllers/socket_controller.js"
+	import LobbyController from "/controllers/lobby_controller.js"
+
 	const body = document.querySelector("body");
 	const session_id = body.dataset["sessionId"];
 	const hostname = window.location.hostname;
