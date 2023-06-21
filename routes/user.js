@@ -162,8 +162,8 @@ router.post("/register", function(request, response, next) {
     })
     .then(user => {
         request.session.username = user.username;
-        // I'm going to just disable this for now, because I don't have an email address set up
-        // specifically for this website.
+        request.session.user_id = user.id;
+        request.session.admin = false
         SendVerificationEmail(user, request.app.locals.client, request.app.locals.config);
         response.redirect("/");
     }).catch(error => {

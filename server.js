@@ -52,12 +52,7 @@ function ReloadConfig(request, response, next) {
 
 // create secure server and accept connections
 
-let port = process.env.PORT;
-
-if (!port) {
-    port = 3000;
-}
-
+const port = 3000;
 const private_key = fs.readFileSync("data/cert.key");
 const certificate = fs.readFileSync("data/cert.crt");
 
