@@ -15,6 +15,7 @@ router.get("/:game_id", (request, response, next) => {
     let context = {
         title: "user1 vs user2",
         session_id: request.session.id,
+        config: request.app.locals.config
     };
 
     // get the game from redis (game not lobby game)

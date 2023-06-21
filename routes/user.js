@@ -53,7 +53,6 @@ router.post("/login", function(request, response, next) {
         return svc.IsAdmin(ref.user.id);
     })
     .then(admin => {
-        console.log(admin);
         request.session.admin = admin
         response.redirect("/");
     })
@@ -102,7 +101,8 @@ router.get("/register", function(request, response, next) {
             password: "",
             confirm_password: "",
         },
-        errors: []
+        errors: [],
+        config: request.app.locals.config,
     };
     if (request.session.username?.length) {
         response.redirect("/");
@@ -119,7 +119,8 @@ router.post("/register", function(request, response, next) {
     let context = {
         title: "Register",
         form: form,
-        errors: []
+        errors: [],
+        config: request.app.locals.config,
     };
 
     const svc = new User.RedisService(request.app.locals.client);
@@ -163,7 +164,7 @@ router.post("/register", function(request, response, next) {
         request.session.username = user.username;
         // I'm going to just disable this for now, because I don't have an email address set up
         // specifically for this website.
-        // SendVerificationEmail(user, request.app.locals.client);
+        SendVerificationEmail(user, request.app.locals.client, request.app.locals.config);
         response.redirect("/");
     }).catch(error => {
         console.log(error.message);

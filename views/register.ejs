@@ -37,8 +37,11 @@
 			</table>
 			<input type="submit" value="Register">
 
-			<p>Your email address is optional, however a confirmed email address is required to chat and to reset your password.</p>
-			<p>(email features are currently not implemented)</p>
+			<p>Your email address is optional, however a confirmed email address is required to reset your password.</p>
+
+			<% if (!config.email_enabled) { %>
+				<p>(Email verification is currently disabled)</p>
+			<% } %>
 		</form>
 	</body>
 </html>

@@ -1,7 +1,7 @@
 const fs = require("fs/promises");
 const path = require('node:path');
 
-const NODEMAILER_CONFIG_FILEPATH = "data/nodemailer_config.json";
+const CONFIG_FILE_PATH = "data/config.json";
 
 function SaveJsonToDisk(filepath, json) {
     // make the directory first
@@ -15,5 +15,5 @@ function LoadJsonFromDisk(filepath) {
 }
 
 module.exports = {
-    LoadJsonFromDisk, SaveJsonToDisk, NODEMAILER_CONFIG_FILEPATH,
+    LoadJsonFromDisk, SaveJsonToDisk, CONFIG_FILE_PATH,
 };

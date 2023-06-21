@@ -1,44 +1,46 @@
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
-const JsonService = require("./json_service");
 
-
-function SendVerificationEmail(user, client) {
+function SendVerificationEmail(user, client, config) {
     if (!user.email.length) {
         return;
     }
 
-    // load the configuration from json
-    JsonService.LoadJsonFromDisk(JsonService.NODEMAILER_CONFIG_FILEPATH).then(config_options => {
+    if (config.email_enabled) {
+        console.log("Email enabled")
+    }
+    else {
+        console.log("Email disabled");
+        return;
+    }
 
-        // create a verification key
-        const verification_key = crypto.randomUUID();
+    // create a verification key
+    const verification_key = crypto.randomUUID();
 
-        // create the email message
-        const transporter = nodemailer.createTransport(config_options);
-        const mail_options = {
-            from: config_options.auth.user,
-            to: user.email,
-            subject: `Hello ${user.username}`,
-            html: EmailBody(user, "http://localhost:3000", verification_key)
+    // create the email message
+    const transporter = nodemailer.createTransport(config.nodemailer_config);
+    const mail_options = {
+        from: config.nodemailer_config.auth.user,
+        to: user.email,
+        subject: `Hello ${user.username}`,
+        html: EmailBody(user, config.website_url, verification_key)
+    }
+
+    // send the email
+    transporter.sendMail(mail_options, function(error, info) {
+        if (error) {
+            console.log(error);
         }
-
-        // send the email
-        transporter.sendMail(mail_options, function(error, info) {
-            if (error) {
-                console.log(error);
-            }
-            else {
-                console.log(`Email sent: ${info.response}`);
-                const svc = new RedisService(client);
-                svc.SetVerificationToken(verification_key, user.email);
-            }
-        })
-    }).catch(console.error);
+        else {
+            console.log(`Email sent: ${info.response}`);
+            const svc = new RedisService(client);
+            svc.SetVerificationToken(verification_key, user.email);
+        }
+    })
 }
 
-function EmailBody(user, host, key) {
-    const link = `${host}/user/verify/${key}`;
+function EmailBody(user, origin, key) {
+    const link = `${origin}/user/verify/${key}`;
     let html = 
         `<p>Hello ${user.username},</p>` +
         `<p>Please click the following link to verify your email address:</p>` +

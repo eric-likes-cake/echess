@@ -7,7 +7,8 @@ router.get("/", function(request, response, next) {
         title: "Lobby",
         session_id: request.session.id,
         username: request.session.username || "",
-        error: ""
+        error: "",
+        config: request.app.locals.config
     };
 
     response.render("lobby", context)
