@@ -1,124 +1,71 @@
-const body = document.querySelector("body");
-const session_id = body.dataset["sessionId"];
-const hostname = window.location.hostname;
 
-body.addEventListener("click", PlayGameClick)
+class LobbyController {
 
-function PlayGameClick(e) {
-    if (!e.target.classList.contains("play-game-link")) {
-        return true;
+    constructor(socket_ctrl, game_table) {
+        this.socket_ctrl = socket_ctrl;
+        this.game_table = game_table;
+
+        const body = document.querySelector("body");
+        body.addEventListener("click", CreatePlayGameClickHandler(socket_ctrl));
+
+        this.socket_ctrl.SetCommandCallback("new-game", (game) => this.AddGames([game]));
+        this.socket_ctrl.SetCommandCallback("game-list", (games) => {this.ClearGames(); this.AddGames(games);});
+        this.socket_ctrl.SetCommandCallback("remove-games", (ids) => this.RemoveGames(ids));
+        this.socket_ctrl.SetCommandCallback("game-url", (url) => window.location.assign(url));
+
+        this.socket_ctrl.OnConnect(function() {
+            socket_ctrl.SocketMessage("game-list");
+            socket_ctrl.SocketMessage("lobby");
+        })
     }
 
-    e.preventDefault();
-
-    // get the color or id
-    const color = e.target.dataset["color"];
-    const id = e.target.dataset["id"];
-
-    if (color) {
-        SocketMessage("play-game", color);
+    ClearGames() {
+        const table_body = document.querySelector(this.game_table);
+        table_body.innerHTML = "";
     }
-    else if (id) {
-        SocketMessage("play-game", id);
+
+    AddGames(games) {
+        const table_body = document.querySelector(this.game_table);
+        const table_data = games.map(game => {
+            return (
+                `<tr id="${game.id}">
+                    <td>${game.username}</td>
+                    <td>${game.color}</td>
+                    <td>${game.date}</td>
+                    <td><a href="/game/${game.id}" class="play-game-link" data-id="${game.id}">Join Game</a></td>
+                </tr>`
+            )
+        });
+        table_body.innerHTML += table_data.join("");
     }
+
+    RemoveGames(ids) {
+        for (let id of ids) {
+            const table_row = document.getElementById(id);
+            table_row.remove();
+        }
+    }
+}
+
+function CreatePlayGameClickHandler(socket_ctrl) {
+    return (function(e) {
+        if (!e.target.classList.contains("play-game-link")) {
+            return true;
+        }
     
-    return false;
-}
-
-// Create WebSocket connection.
-SetConnectionMessage("Not connected.");
-let socket = Connect();
-
-function Connect() {
-    const socket = new WebSocket(`wss://${hostname}:3030`);
-
-    // Connection opened
-    socket.addEventListener("open", (event) => {
-        SetConnectionMessage("Connected.", "green");
-        SocketMessage("game-list");
-        SocketMessage("auth", session_id);
-        SocketMessage("lobby");
-    });
-
-    // Listen for messages
-    socket.addEventListener("message", (event) => {
-        console.log(event.data);
-        HandleServerMessage(event.data);
-    });
-
-    socket.addEventListener("close", (event) => {
-        console.log(event.type);
-        SetConnectionMessage("Disconnected.", "red");
-    });
+        e.preventDefault();
     
-    return socket;
-}
-
-function SetConnectionMessage(message, color) {
-    const td = document.querySelector("td#connection-status");
-    td.classList.remove("green");
-    td.classList.remove("red");
-    if (color?.length) {
-        td.classList.add(color);
-    }
-    td.innerHTML = message;
-}
-
-// reconnect as needed
-const interval = setInterval(function() {
-    if (socket.readyState === WebSocket.CLOSED) {
-        SetConnectionMessage("Reconnecting...", "red");
-        socket = Connect();
-    }
-}, 2000);
-
-function HandleServerMessage(message) {
-    const [tag, data] = JSON.parse(message);
-    if (tag === "message") {
-        console.log(message);
-    }
-    else if (tag === "new-game") {
-        AddGames([data]);
-    }
-    else if (tag === "game-list") {
-        ClearGames();
-        AddGames(data);
-    }
-    else if (tag === "remove-games") {
-        RemoveGames(data);
-    }
-    else if (tag === "game-url") {
-        window.location.assign(data);
-    }
-}
-
-function ClearGames() {
-    const table_body = document.querySelector("#games");
-    table_body.innerHTML = "";
-}
-
-function AddGames(games) {
-    const table_body = document.querySelector("#games");
-    const table_data = games.map(game => {
-        return (
-            `<tr id="${game.id}">
-                <td>${game.username}</td>
-                <td>${game.color}</td>
-                <td>${game.date}</td>
-                <td><a href="/game/${game.id}" class="play-game-link" data-id="${game.id}">Join Game</a></td>
-            </tr>`
-        )
-    });
-    table_body.innerHTML += table_data.join("");
-}
-
-function RemoveGames(ids) {
-    for (let id of ids) {
-        const table_row = document.getElementById(id);
-        table_row.remove();
-    }
-}
-
-function SocketMessage(tag, ...data) {
-    socket.send(JSON.stringify([tag, ...data]));
+        // get the color or id
+        const color = e.target.dataset["color"];
+        const id = e.target.dataset["id"];
+    
+        if (color) {
+            socket_ctrl.SocketMessage("play-game", color);
+        }
+        else if (id) {
+            socket_ctrl.SocketMessage("play-game", id);
+        }
+        
+        return false;
+    })
 }

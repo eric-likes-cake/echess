@@ -41,7 +41,17 @@ class WebsocketGameController {
     }
 
     SpectateGameCommand(socket, game_id) {
-        console.log(game_id);
+        this.game_svc.Load(game_id).then(game => {
+            const engine = new Chess();
+            game.moves.forEach(move => engine.move(move));
+
+            SetStateSpectator.call(this, socket, game);
+
+            socket.send(this.wsc.Response("fen", engine.fen()));
+        }).catch(error => {
+            console.error(error);
+            socket.send(this.wsc.Response("error", "An error occurred"));
+        });
     }
 
     MoveCommand(socket, move) {
@@ -87,6 +97,10 @@ function MakeMove(socket, move) {
 function SetState(socket, game, engine) {
     this.games.set(socket, game);
     this.engines.set(socket, engine);
+    SetStateSpectator.call(this, socket, game);
+}
+
+function SetStateSpectator(socket, game) {
     if (!this.clients.has(game.id)) {
         this.clients.set(game.id, []);
     }

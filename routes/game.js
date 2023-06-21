@@ -25,7 +25,6 @@ router.get("/:game_id", (request, response, next) => {
     const user_svc = new User.RedisService(request.app.locals.client);
 
     game_svc.Load(request.game_id).then(game => {
-        console.log(game);
         context.game = game;
         return GetUsers(user_svc, game);
     })
@@ -35,8 +34,6 @@ router.get("/:game_id", (request, response, next) => {
         context.title = white + " vs " + black;
     })
     .then(() => {
-        console.log(context);
-
         if (context.game.IsWhite(request.session.user_id, request.session.id)) {
             context.color = "white";
             response.render("game", context);

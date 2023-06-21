@@ -48,4 +48,16 @@
 	</body>
 </html>
 
+<script src="/socket_controller.js"></script>
 <script src="/lobby_controller.js"></script>
+<script>
+	const body = document.querySelector("body");
+	const session_id = body.dataset["sessionId"];
+	const hostname = window.location.hostname;
+
+	const socket_ctrl = new SocketController(`wss://${hostname}:3030`, "#connection-status", session_id);
+	const lobby_ctrl = new LobbyController(socket_ctrl, "#games");
+
+	socket_ctrl.Connect();
+	socket_ctrl.EnableReconnection();
+</script>

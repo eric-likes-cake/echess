@@ -3,10 +3,34 @@
 	<head>
 		<meta charset="UTF-8">
 		<link rel="stylesheet" href="/base.css">
+		<link rel="stylesheet" href="/game/chessboard-1.0.0.min.css">
+		<!-- jQuery is a dependency of chessboardjs -->
+		<script src="/jquery-3.5.1.min.js"></script>
+		<script src="/game/chessboard-1.0.0.min.js"></script>
 		<title><%= title %></title>
 	</head>
-	<body>
+	<body data-color="<%= color %>" data-session-id="<%= session_id %>" data-game-id="<%= game.id %>">
 		<h1><%= title %></h1>
 		<p>You are spectating.</p>
+		<div id="board" style="width: 500px"></div>
+		<p class="bold">Connection Status: <span id="connection-status"></span></p>
 	</body>
 </html>
+
+<script src="/socket_controller.js"></script>
+
+<script type="module">
+	import GameController from "/game_controller.js"
+
+	const body = document.querySelector("body");
+	const session_id = body.dataset["sessionId"];
+	const color = body.dataset["color"];
+	const game_id = body.dataset["gameId"];
+	const hostname = window.location.hostname;
+
+	const socket_ctrl = new SocketController(`wss://${hostname}:3030`, "#connection-status", session_id);
+	const game_ctrl = new GameController(socket_ctrl, "board", color, game_id, false);
+
+	socket_ctrl.Connect();
+	socket_ctrl.EnableReconnection();
+</script>

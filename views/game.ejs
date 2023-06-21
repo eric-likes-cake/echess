@@ -18,4 +18,20 @@
 </html>
 
 
-<script type="module" src="/game_controller.js"></script>
+<script src="/socket_controller.js"></script>
+
+<script type="module">
+	import GameController from "/game_controller.js"
+
+	const body = document.querySelector("body");
+	const session_id = body.dataset["sessionId"];
+	const color = body.dataset["color"];
+	const game_id = body.dataset["gameId"];
+	const hostname = window.location.hostname;
+
+	const socket_ctrl = new SocketController(`wss://${hostname}:3030`, "#connection-status", session_id);
+	const game_ctrl = new GameController(socket_ctrl, "board", color, game_id, true);
+
+	socket_ctrl.Connect();
+	socket_ctrl.EnableReconnection();
+</script>
