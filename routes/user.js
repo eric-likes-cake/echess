@@ -115,7 +115,6 @@ router.get("/register", function(request, response, next) {
 router.post("/register", function(request, response, next) {
 
     const form = request.body;
-    form.username = form.username.toLowerCase();
 
     let context = {
         title: "Register",

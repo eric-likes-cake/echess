@@ -27,7 +27,7 @@ class RedisService {
      */
     LoadUser(filter) {
         let {username, id} = filter;
-        return (id?.length ? Promise.resolve(id) : this.client.GET(`echess:user_id:${username}`))
+        return (id?.length ? Promise.resolve(id) : this.client.GET(`echess:user_id:${username?.toLowerCase()}`))
             .then(id => this.client.HGETALL(`echess:user:${id}`))
             .then(object => Object.keys(object).length ? object : Promise.reject(new Error(`User not found: ${JSON.stringify(filter)}`)))
             .then(object => Object.assign(new User(), object));
@@ -35,7 +35,7 @@ class RedisService {
     
     SaveUser(user) {
         return this.client.MULTI()
-            .SET(`echess:user_id:${user.username}`, user.id)
+            .SET(`echess:user_id:${user.username.toLowerCase()}`, user.id)
             .HSET(`echess:user:${user.id}`, Object.entries(user).flat())
             .EXEC().then(results => results[0] == "OK" ? this.client.SAVE() : Promise.reject(new Error("Error saving user")))
     }
@@ -53,11 +53,11 @@ class RedisService {
     }
 
     GetUserID(username) {
-        return this.client.GET(`echess:user_id:${username}`);
+        return this.client.GET(`echess:user_id:${username.toLowerCase()}`);
     }
     
     UsernameExists(username) {
-        return this.client.EXISTS(`echess:user_id:${username}`);
+        return this.client.EXISTS(`echess:user_id:${username.toLowerCase()}`);
     }
 
     // So that the websocket server can access the session username
