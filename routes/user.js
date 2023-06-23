@@ -38,7 +38,7 @@ router.post("/login", function(request, response, next) {
         user: new User.User()
     };
 
-    const svc = new User.RedisService(request.app.locals.client);
+    const svc = new User.RedisService(request.app.locals.redis_client);
 
     svc.LoadUser({username: form.username}).then(user => {
         ref.user = user;
@@ -54,6 +54,7 @@ router.post("/login", function(request, response, next) {
     })
     .then(admin => {
         request.session.admin = admin
+        request.app.locals.loggedin = true;
         response.redirect("/");
     })
     .catch(error => {
@@ -75,7 +76,7 @@ router.get("/user/:id", function(request, response, next) {
         return;
     }
 
-    const svc = new User.RedisService(request.app.locals.client);
+    const svc = new User.RedisService(request.app.locals.redis_client);
 
     svc.LoadUser({id: request.id})
         .then(user => response.json(user))
@@ -83,7 +84,7 @@ router.get("/user/:id", function(request, response, next) {
 });
 
 router.get("/logout", function(request, response, next) {
-    request.session.username = "";
+    request.app.locals.loggedin = false;
     request.session.destroy(err => {
         if (err) {
             console.log(err)
@@ -102,7 +103,6 @@ router.get("/register", function(request, response, next) {
             confirm_password: "",
         },
         errors: [],
-        config: request.app.locals.config,
     };
     if (request.session.username?.length) {
         response.redirect("/");
@@ -123,7 +123,7 @@ router.post("/register", function(request, response, next) {
         config: request.app.locals.config,
     };
 
-    const svc = new User.RedisService(request.app.locals.client);
+    const svc = new User.RedisService(request.app.locals.redis_client);
 
     svc.UsernameExists(form.username).then(result => {
         console.log(result);
@@ -163,8 +163,9 @@ router.post("/register", function(request, response, next) {
     .then(user => {
         request.session.username = user.username;
         request.session.user_id = user.id;
-        request.session.admin = false
-        SendVerificationEmail(user, request.app.locals.client, request.app.locals.config);
+        request.session.admin = false;
+        request.app.locals.loggedin = true;
+        SendVerificationEmail(user, request.app.locals.redis_client, request.app.locals.config);
         response.redirect("/");
     }).catch(error => {
         console.log(error.message);

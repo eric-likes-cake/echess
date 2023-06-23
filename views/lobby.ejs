@@ -10,7 +10,7 @@
 		<% if (error && error.length) { %>
 			<p>An error occurred: <%= error %></p>
 		<% } %>
-		<p>information:</p>
+		<h2>Status</h2>
 		<table class="th-left" border="1">
 			<tr>
 				<th>Username:</th>
@@ -28,7 +28,7 @@
 			<a href="#" class="play-game-link" data-color="white">white</a>, or as
 			<a href="#" class="play-game-link" data-color="black">black</a>
 		</p>
-		<h2>Games:</h2>
+		<h2>Games</h2>
 		<table border="1">
 			<thead>
 				<tr>
@@ -40,11 +40,7 @@
 			</thead>
 			<tbody id="games"></tbody>
 		</table>
-		<ul>
-			<li><a href="/login">Log in</a></li>
-			<li><a href="/logout">Log out</a></li>
-			<li><a href="/register">Register</a></li>
-		</ul>
+		<%- include("links"); -%>
 	</body>
 </html>
 

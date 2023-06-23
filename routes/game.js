@@ -22,8 +22,8 @@ router.get("/:game_id", (request, response, next) => {
     // if user is one of the players, render the game view
     // otherwise, user is a spectator, render the spectator view
 
-    const game_svc = new Game.RedisService(request.app.locals.client);
-    const user_svc = new User.RedisService(request.app.locals.client);
+    const game_svc = new Game.RedisService(request.app.locals.redis_client);
+    const user_svc = new User.RedisService(request.app.locals.redis_client);
 
     game_svc.Load(request.game_id).then(game => {
         context.game = game;

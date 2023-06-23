@@ -1,0 +1,24 @@
+<h2>Links</h2>
+<nav>
+	<ul>
+		<li><a href="/">Lobby</a></li>
+		<% if (locals.loggedin) { %>
+			<li>Account</li>
+			<li><a href="/logout">Log out</a></li>
+		<% } else { %>
+			<li><a href="/login">Log in</a></li>
+			<li><a href="/register" id="register-link">Register</a></li>
+			<li>Forgot password</li>
+		<% } %>
+	</ul>
+	<ul>
+		<li>About me</li>
+		<li>My portfolio</li>
+		<li>Contact</li>
+	</ul>
+	<ul>
+		<li>About this site</li>
+		<li><a href="https://github.com/ericshawlinux/echess" target="_blank">View the code on GitHub</a></li>
+	</ul>
+	<div style="clear: both"></div>
+</nav>

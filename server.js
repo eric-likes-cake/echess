@@ -17,7 +17,7 @@ const app = express();
 // store redis client in the app.locals so we can access it during a request without reconnecting
 const client = createClient();
 client.connect().catch(console.error);
-app.locals.client = client;
+app.locals.redis_client = client;
 
 const redis_store = new RedisStore({
     client: client,

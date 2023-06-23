@@ -17,3 +17,7 @@ th, td {
 .bold {
     font-weight: bold;
 }
+
+nav ul {
+    float: left;
+}
