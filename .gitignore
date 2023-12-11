@@ -3,6 +3,7 @@ npm-debug.log
 .DS_Store
 /*.env
 /.vscode
+/.vs
 package-lock.json
 
 data/

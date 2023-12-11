@@ -40,7 +40,8 @@ function PlayerMove(data) {
         return;
     }
     this.game?.move(data)
-    this.board.move(data.from + "-" + data.to);
+    this.board.position(this.game.fen());
+
 }
 
 function InitFen(fen) {
@@ -65,9 +66,11 @@ function DragCallback(source, piece, position, orientation) {
 }
 
 function DropCallback(source, target, piece, new_pos, old_pos, orientation) {
+
     const data = {
         from: source,
         to: target,
+        promotion: "q",
     };
 
     const move = this.game.move(data);
@@ -76,5 +79,5 @@ function DropCallback(source, target, piece, new_pos, old_pos, orientation) {
         return "snapback";
     }
 
-    this.socket_ctrl.SocketMessage("move", data);
+    this.socket_ctrl.SocketMessage("move", move.san);
 };
