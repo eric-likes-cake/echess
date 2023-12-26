@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<link rel="stylesheet" href="/style/base.css">
+		<title><%= title %></title>
+	</head>
+	<body data-session-id="<%= session_id %>" data-websocket-server-url="<%= config.websocket_server_url %>" data-game-id="<%= game_id %>">
+		<h1><%= title %></h1>
+		<% if (error && error.length) { %>
+			<p>An error occurred: <%= error %></p>
+		<% } %>
+		<h2>Status</h2>
+		<table class="th-left" border="1">
+			<tr>
+				<th>Username:</th>
+				<td><%= username %></td>
+			</tr>
+			<tr>
+				<th>Connection Status:</th>
+				<td id="connection-status"></td>
+			</tr>
+		</table>
+
+		<div id="invitation-display"></div>
+			
+		<%- include("links"); -%>
+	</body>
+</html>
+
+<script type="module">
+	import SocketController from "/controllers/socket_controller.js"
+	import LobbyController from "/controllers/lobby_controller.js"
+	import InvitationController from "/controllers/invitation_controller.js"
+
+	const body = document.querySelector("body");
+	const session_id = body.dataset["sessionId"];
+	const url = body.dataset["websocketServerUrl"];
+	const game_id = body.dataset["gameId"];
+
+	const socket_ctrl = new SocketController(url, "#connection-status", session_id);
+	const lobby_ctrl = new LobbyController(socket_ctrl);
+	const invitation_ctrl = new InvitationController(socket_ctrl, game_id, "#invitation-display");
+
+	socket_ctrl.Connect();
+	socket_ctrl.EnableReconnection();
+</script>

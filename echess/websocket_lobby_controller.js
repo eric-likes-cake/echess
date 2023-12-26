@@ -37,7 +37,7 @@ WebSocketLobbyController.prototype.PlayGameCommand = function(socket, data) {
 }
 
 WebSocketLobbyController.prototype.ListGameCommand = function(socket) {
-    const games = Array.from(this.lobby.values()).map(game => LobbyGame.prototype.ViewData.call(game));
+    const games = Array.from(this.lobby.values()).map(game => game.ViewData());
     socket.send(this.wsc.Response("game-list", games));
 }
 
@@ -48,11 +48,14 @@ function CreateLobbyGame(socket, color) {
     const game = new LobbyGame(crypto.randomUUID(), session_id, username, new Date(), color);
     this.lobby.set(game.id, game);
 
+    // send game id to user who created it so that the ui can show "share game" and "join game" links appropriately
+    socket.send(this.wsc.Response("your-game", game.id));
+
+    // send game data to everyone so they can join.
     this.BroadcastToLobby("new-game", game.ViewData());
 }
 
 function JoinGame(socket, id) {
-    // copy and delete the lobby game
     const lg = this.lobby.get(id);
 
     // determine who the two users are, this user and the one who created the game
